@@ -1,0 +1,71 @@
+version: "3"
+networks:
+  database:
+  redis:
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: pegabot-mysql
+    environment:
+      MYSQL_DATABASE: "pegabot_admin_dev"
+      MYSQL_USER: "pegabot_admin"
+      MYSQL_PASSWORD: "pegabot_admin"
+      MYSQL_ROOT_PASSWORD: "root"
+    ports:
+     - 3306:3306
+    volumes:
+      - /var/lib/pegabot-admin-mysql:/var/lib/mysql
+    networks:
+      - database
+
+  directus:
+    build: ./directus
+    container_name: pegabot-directus
+    ports:
+      - "${DIRECTUS_PORT}:80"
+    environment:
+      DIRECTUS_ENV: "production"
+
+      DIRECTUS_AUTH_PUBLICKEY: "directus-dev"
+      DIRECTUS_AUTH_SECRETKEY: "directus-dev-foo"
+
+      DIRECTUS_DATABASE_HOST: "pegabot-mysql"
+      DIRECTUS_DATABASE_PORT: "3306"
+      DIRECTUS_DATABASE_NAME: "pegabot_admin_dev"
+      DIRECTUS_DATABASE_USERNAME: "pegabot_admin"
+      DIRECTUS_DATABASE_PASSWORD: "pegabot_admin"
+    volumes:
+      - ./data/config:/var/directus/config
+      - ./data/uploads:/var/directus/public/uploads
+    networks:
+      - database
+
+  redis:
+    image: "redis"
+    container_name: pegabot-admin-redis
+    expose:
+      - 6379
+    restart: unless-stopped
+    networks:
+      - redis
+
+  app:
+    container_name: pegabot-admin-app
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "3150:3150"
+    expose:
+      - "3150"
+    volumes:
+      - .:/home/node/app_pegabots_admin
+      - /home/node/app_pegabots_admin/node_modules
+      - ./log:/home/node/app_pegabots_admin/log/
+    networks:
+      - database
+      - redis
+    restart: unless-stopped
+    environment:
+      LOG_LEVEL: 'DEBUG'
+

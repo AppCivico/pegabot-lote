@@ -1,0 +1,43 @@
+{
+  "name": "pegabot-lote",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Lucas Ansei",
+  "license": "MIT",
+  "type": "module",
+  "jest": {
+    "transform": {},
+    "setupFiles": [
+      "dotenv/config"
+    ]
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "start:dev": "pm2 start src/index.js",
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --verbose"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.1",
+    "@babel/plugin-transform-modules-commonjs": "^7.13.0",
+    "@babel/preset-env": "^7.13.0",
+    "babel-jest": "^26.6.3",
+    "jest": "^26.6.3"
+  },
+  "dependencies": {
+    "@directus/sdk-js": "6.3.0",
+    "base-64": "^1.0.0",
+    "console-stamp": "^0.2.9",
+    "csv-parser": "^3.0.0",
+    "csv-write-stream": "^2.0.0",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^8.2.0",
+    "fast-csv": "^4.3.6",
+    "fs": "^0.0.1-security",
+    "mysql": "^2.18.1",
+    "mysql-await": "^2.1.6",
+    "slugify": "^1.4.7",
+    "util": "^0.12.3",
+    "utils": "^0.3.1"
+  }
+}
