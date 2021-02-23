@@ -9,8 +9,7 @@ import { countReset } from 'console';
 const {createObjectCsvWriter} = pkg;
 
 const counters = {
-    rows_processed: 0,
-    end_event: 0
+    rows_processed: 0
 };
 
 async function processPendingRequest (directusUploadFolder, dbConnection, pendingUserRequest) {
@@ -74,7 +73,8 @@ async function openResultCSV (fileRow, directusUploadFolder) {
     console.log('Abrindo CSV de resultados');
     const fileName = slugify(fileRow.title) + '-resultados.csv';
     const filePath = directusUploadFolder + fileName;
-
+    console.log(fileName);
+    console.log(filePath);
 	const writer = createObjectCsvWriter({
 		path: filePath,
 		header: [
