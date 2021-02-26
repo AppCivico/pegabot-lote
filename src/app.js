@@ -43,7 +43,7 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
             counters.rows_processed++;
 
             // Salvando campo de progresso absoluto. Ou seja, quantidade total de linhas processadas.
-            await directus.updateProcessedRows(dbConnection, pendingUserRequest, counters.rows_processed);
+            // await directus.updateProcessedRows(dbConnection, pendingUserRequest, counters.rows_processed);
  
             if (counters.rows_processed % 50 === 0) await directus.logProcessProgress (dbConnection, pendingUserRequest, 'linhas processadas: ' + counters.rows_processed);
 

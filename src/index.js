@@ -32,8 +32,8 @@ async function processQueue () {
     else {
         console.info('Sem arquivos com status "waiting" na fila, dormindo por 30s');
 
-        await app.sleep(30000); // Custom sleep function, cuz that's JS for you...
         await dbConnection.awaitEnd();
+        await app.sleep(30000); // Custom sleep function, cuz that's JS for you...
         await processQueue();
     }
 }
