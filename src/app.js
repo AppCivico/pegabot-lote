@@ -39,12 +39,13 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
             const formattedData = await buildCSVResultRow(result);
             
             await resultCSV.writeRecords( [formattedData] );
-
+            
             counters.rows_processed++;
-            if (counters.rows_processed % 50 === 0) await directus.logProcessProgress (dbConnection, pendingUserRequest, 'linhas processadas: ' + counters.rows_processed);
 
             // Salvando campo de progresso absoluto. Ou seja, quantidade total de linhas processadas.
             await directus.updateProcessedRows(dbConnection, pendingUserRequest, counters.rows_processed);
+ 
+            if (counters.rows_processed % 50 === 0) await directus.logProcessProgress (dbConnection, pendingUserRequest, 'linhas processadas: ' + counters.rows_processed);
 
             readStream.resume();
         });
