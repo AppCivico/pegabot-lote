@@ -51,6 +51,12 @@ async function updateRequestStatus (dbConnection, pendingUserRequest, status) {
     );
 }
 
+async function updateProcessedRows (dbConnection, pendingUserRequest, rowCount) {
+    return await dbConnection.awaitQuery(
+        "UPDATE user_requests SET processed_rows = ? WHERE id = ?", [rowCount, pendingUserRequest.id]
+    );
+}
+
 export default {
     getDirectusFileRow,
     getDirectusFileName,

@@ -8,12 +8,12 @@ import pkg from 'csv-writer';
 import { countReset } from 'console';
 const {createObjectCsvWriter} = pkg;
 
-const counters = {
-    rows_processed: 0
-};
-
 async function processPendingRequest (directusUploadFolder, dbConnection, pendingUserRequest) {
-	const fileRow  = await directus.getDirectusFileRow(dbConnection, pendingUserRequest.input_file);
+	const counters = {
+        rows_processed: 0
+    };
+    
+    const fileRow  = await directus.getDirectusFileRow(dbConnection, pendingUserRequest.input_file);
     const fileName = await directus.getDirectusFileName(fileRow, directusUploadFolder);
 
 	const resultCSV = await openResultCSV(fileRow, directusUploadFolder);
@@ -42,6 +42,9 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
 
             counters.rows_processed++;
             if (counters.rows_processed % 50 === 0) await directus.logProcessProgress (dbConnection, pendingUserRequest, 'linhas processadas: ' + counters.rows_processed);
+
+            // Salvando campo de progresso absoluto. Ou seja, quantidade total de linhas processadas.
+            await directus.updateProcessedRows(dbConnection, pendingUserRequest, counters.rows_processed);
 
             readStream.resume();
         });
