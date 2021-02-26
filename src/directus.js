@@ -63,5 +63,6 @@ export default {
     logProcessProgress,
     saveResultCSV,
     setUserRequestCompleted,
-    updateRequestStatus
+    updateRequestStatus,
+    updateProcessedRows
 }
