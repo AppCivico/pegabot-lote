@@ -8,7 +8,7 @@ import pkg from 'csv-writer';
 import { countReset } from 'console';
 const {createObjectCsvWriter} = pkg;
 
-async function processPendingRequest (directusUploadFolder, dbConnection, pendingUserRequest) {
+async function processPendingRequest (directusUploadFolder, dbConnection, pendingUserRequest, emailTransporter) {
 	const counters = {
         rows_processed: 0
     };
@@ -74,6 +74,9 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
 
             console.info('Fechando conexão com o banco');
             await dbConnection.awaitEnd();
+
+            // Envio de e-mail de resultados
+
     
             resolve('completed');
         });
@@ -149,6 +152,10 @@ async function buildCSVResultRow (response) {
     }
 
 	return row;
+}
+
+async function sendResultEmail (emailTransporter, file) {
+
 }
 
 function sleep(millis) {
