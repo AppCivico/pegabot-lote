@@ -26,6 +26,8 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
     return new Promise((resolve, reject) => {
 
         readStream.on('data', async (row) => {
+            counters.rows_processed++;
+
             // A execução da request pode demorar
             // Manipulação do "flow" do stream para garantir
             // a execução dessa func até o final, antes da execução do evento de "end"
@@ -42,13 +44,15 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
             const formattedData = await buildCSVResultRow(result);
             
             await resultCSV.writeRecords( [formattedData] );
-            
-            counters.rows_processed++;
 
-            // Salvando campo de progresso absoluto. Ou seja, quantidade total de linhas processadas.
-            // await directus.updateProcessedRows(dbConnection, pendingUserRequest, counters.rows_processed);
- 
-            if (counters.rows_processed % 50 === 0) await directus.logProcessProgress (dbConnection, pendingUserRequest, 'linhas processadas: ' + counters.rows_processed);
+            
+            if (counters.rows_processed % 50 === 0) {
+                await directus.logProcessProgress (dbConnection, pendingUserRequest, 'linhas processadas: ' + counters.rows_processed);
+            }
+            else if (counters.rows_processed % 10 === 0) {
+                // Salvando campo de progresso absoluto. Ou seja, quantidade total de linhas processadas.
+                await directus.updateProcessedRows(dbConnection, pendingUserRequest, counters.rows_processed);
+            }
 
             readStream.resume();
         });
@@ -66,7 +70,8 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
             await directus.setUserRequestCompleted(dbConnection, pendingUserRequest, outputFile.insertId);
         
             await directus.logProcessProgress (dbConnection, pendingUserRequest, 'Processamento finalizado');
-    
+            await directus.updateProcessedRows(dbConnection, pendingUserRequest, counters.rows_processed);
+
             console.info('Fechando conexão com o banco');
             await dbConnection.awaitEnd();
     
