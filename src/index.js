@@ -3,6 +3,7 @@ dotenv.config();
 
 import db from './db.js';
 import app from './app.js';
+import mailer from './mailer.js';
 
 // mysql envs
 const MYSQL_HOST     = process.env.MYSQL_HOST;
@@ -14,23 +15,31 @@ const MYSQL_DATABASE = process.env.MYSQL_DATABASE;
 // Directus envs
 const DIRECTUS_UPLOAD_FOLDER = process.env.DIRECTUS_UPLOAD_FOLDER;
 
+// Mailer envs
+const EMAIL_USER    = process.env.EMAIL_USER;
+const EMAIL_PASS    = process.env.EMAIL_PASS;
+const EMAIL_HOST    = process.env.EMAIL_HOST;
+const EMAIL_PORT    = process.env.EMAIL_PORT;
+const EMAIL_SERVICE = process.env.EMAIL_SERVICE;
+const EMAIL_FROM    = process.env.EMAIL_FROM;
+
 async function processQueue () {
     const dbConnection          = db.makeDB(MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE);
     const processingUserRequest = await dbConnection.awaitQuery( "SELECT * FROM user_requests WHERE status = 'analysing' ORDER BY created_on ASC LIMIT 1" );
-    const pendingUserRequest    = await dbConnection.awaitQuery( "SELECT * FROM user_requests WHERE status = 'waiting' ORDER BY created_on DESC LIMIT 1" );
+    const pendingUserRequest    = await dbConnection.awaitQuery( "SELECT * FROM user_requests WHERE status = 'waiting' ORDER BY created_on ASC LIMIT 1" );
 
-    if (processingUserRequest[0]) {
-        console.info(`Já havia um user_request sendo processado id=${processingUserRequest[0].id}, continuando...`);
-        await app.processPendingRequest(DIRECTUS_UPLOAD_FOLDER, dbConnection, processingUserRequest[0]);
-        await processQueue();
-    }
-    else if (pendingUserRequest[0]) {
-        console.info(`Iniciando processamento de um user_request, id=${pendingUserRequest[0].id}`);
-        await app.processPendingRequest(DIRECTUS_UPLOAD_FOLDER, dbConnection, pendingUserRequest[0]);
+    const emailTransporter = await mailer.getTransporter(EMAIL_SERVICE, EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS);
+
+    if (processingUserRequest[0] || pendingUserRequest[0]) {
+
+        // Se já existia uma planilha processando, ela toma precedência.
+        const userRequest = processingUserRequest[0] || pendingUserRequest[0];
+
+        await app.processPendingRequest(DIRECTUS_UPLOAD_FOLDER, dbConnection, userRequest, emailTransporter, EMAIL_FROM);
         await processQueue();
     }
     else {
-        console.info('Sem arquivos com status "waiting" na fila, dormindo por 30s');
+        console.info('Sem planilhas para processar, dormindo por 30s');
 
         await dbConnection.awaitEnd();
         await app.sleep(30000); // Custom sleep function, cuz that's JS for you...
