@@ -34,7 +34,10 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
             const handle = row.perfil || row.Perfil;
             console.info('Buscando handle ' + handle);
 
-            
+            // Chave que será usada para guardar/buscar cache no Redis.
+            // Padrão da chave: "foo:@bar"
+            const redisKey = `${fileRow.filename_disk}:${handle}`;
+
             const result        = await pegabotApi.getResult(handle);
             const formattedData = await buildCSVResultRow(result);
             
@@ -74,11 +77,10 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
 }
 
 async function openResultCSV (fileRow, directusUploadFolder) {
-    console.log('Abrindo CSV de resultados');
     const fileName = slugify(fileRow.title) + '-resultados.csv';
     const filePath = directusUploadFolder + fileName;
-    console.log(fileName);
-    console.log(filePath);
+    console.info(`Abrindo CSV de resultados, nome do arquivo: ${fileName}`);
+
 	const writer = createObjectCsvWriter({
 		path: filePath,
 		header: [
@@ -94,6 +96,7 @@ async function openResultCSV (fileRow, directusUploadFolder) {
 			{ id: 'avatar',          title: 'Avatar do Perfil' },
 			{ id: 'user_id',         title: 'ID do Usuário' },
 			{ id: 'user_name',       title: 'Nome do Usuário' },
+            { id: 'created_at',      title: 'Criação da conta' },
 			{ id: 'following',       title: 'Seguindo' },
 			{ id: 'followers',       title: 'Seguidores' },
 			{ id: 'tweet_count',     title: 'Número de Tweets' },
@@ -129,6 +132,9 @@ async function buildCSVResultRow (response) {
         row.url             = profile.url,
         row.avatar          = profile.avatar,
     
+        row.user_id     = response.twitter_data.user_id,
+        row.user_name   = response.twitter_data.user_name,
+        row.created_at  = new Date(response.twitter_data.created_at).toLocaleString('pt-BR', {timezone: 'America/Sao_paulo'}),
         row.following   = response.twitter_data.following,
         row.followers   = response.twitter_data.followers,
         row.tweet_count = response.twitter_data.number_tweets,
