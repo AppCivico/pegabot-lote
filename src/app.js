@@ -8,7 +8,7 @@ import pkg from 'csv-writer';
 import { countReset } from 'console';
 const {createObjectCsvWriter} = pkg;
 
-async function processPendingRequest (directusUploadFolder, dbConnection, pendingUserRequest, emailTransporter) {
+async function processPendingRequest (directusUploadFolder, dbConnection, pendingUserRequest, emailTransporter, emailFrom, directusHost) {
 	const counters = {
         rows_processed: 0
     };
@@ -44,8 +44,7 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
             const formattedData = await buildCSVResultRow(result);
             
             await resultCSV.writeRecords( [formattedData] );
-
-            
+    
             if (counters.rows_processed % 50 === 0) {
                 await directus.logProcessProgress (dbConnection, pendingUserRequest, 'linhas processadas: ' + counters.rows_processed);
             }
@@ -69,14 +68,16 @@ async function processPendingRequest (directusUploadFolder, dbConnection, pendin
             console.info('Atualizando status do user_request para "complete"');
             await directus.setUserRequestCompleted(dbConnection, pendingUserRequest, outputFile.insertId);
         
-            await directus.logProcessProgress (dbConnection, pendingUserRequest, 'Processamento finalizado');
-            await directus.updateProcessedRows(dbConnection, pendingUserRequest, counters.rows_processed);
+            await directus.logProcessProgress  (dbConnection, pendingUserRequest, 'Processamento finalizado');
+            await directus.updateProcessedRows (dbConnection, pendingUserRequest, counters.rows_processed);
 
             console.info('Fechando conexão com o banco');
             await dbConnection.awaitEnd();
 
             // Envio de e-mail de resultados
-
+            const outputFileURL = directusHost + `/uploads/_/originals/${resultCSV.fileName}`;
+            const emailTo       = pendingUserRequest.email;
+            await sendResultEmail(emailTransporter, outputFileURL, emailFrom, emailTo);
     
             resolve('completed');
         });
@@ -154,8 +155,13 @@ async function buildCSVResultRow (response) {
 	return row;
 }
 
-async function sendResultEmail (emailTransporter, file) {
-
+async function sendResultEmail (emailTransporter, outputFileURL, emailFrom, emailTo) {
+    return await emailTransporter.sendMail({
+        from: emailFrom,
+        to: emailTo,
+        subject: 'Pegabot - Sua Análise está pronta!',
+        text: `Olá! Aqui estão os resultados da última análise do Pegabots. Baixe no link: ${outputFileURL}`
+    })
 }
 
 function sleep(millis) {

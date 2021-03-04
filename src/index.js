@@ -14,6 +14,7 @@ const MYSQL_DATABASE = process.env.MYSQL_DATABASE;
 
 // Directus envs
 const DIRECTUS_UPLOAD_FOLDER = process.env.DIRECTUS_UPLOAD_FOLDER;
+const DIRECTUS_HOST          = process.env.DIRECTUS_HOST;
 
 // Mailer envs
 const EMAIL_USER    = process.env.EMAIL_USER;
@@ -35,7 +36,7 @@ async function processQueue () {
         // Se já existia uma planilha processando, ela toma precedência.
         const userRequest = processingUserRequest[0] || pendingUserRequest[0];
 
-        await app.processPendingRequest(DIRECTUS_UPLOAD_FOLDER, dbConnection, userRequest, emailTransporter, EMAIL_FROM);
+        await app.processPendingRequest(DIRECTUS_UPLOAD_FOLDER, dbConnection, userRequest, emailTransporter, EMAIL_FROM, DIRECTUS_HOST);
         await processQueue();
     }
     else {
