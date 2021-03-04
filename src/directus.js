@@ -17,7 +17,7 @@ async function getDirectusFileName (row, directusUploadFolder) {
 async function logProcessProgress (dbConnection, pendingUserRequest, msg) {
     const userRequest = await getUserRequest(dbConnection, pendingUserRequest.id);
 
-    const now       = new Date();
+    const now       = new Date().toLocaleString('pt-BR', {timezone: 'America/Sao_paulo'});
     const msgWithTS = `[${now}] ${msg}`;
 
     const userRequestLogs    = userRequest.logs;
