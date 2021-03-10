@@ -14,7 +14,7 @@ async function getResult(profile) {
     };
   
     try {
-      const result = await axios({ url: `${pegabotAPI}/botometer`, method: 'get', params: searchParams, timeout: 10000 });
+      const result = await axios({ url: `${pegabotAPI}/botometer`, method: 'get', params: searchParams, timeout: 30000 });
 
       if (!result) throw new Error('Não houve resposta da api');
       if (Array.isArray(result.data) && result.data.length === 0) throw new Error('Parece que usuário não tem tweets na timeline');
